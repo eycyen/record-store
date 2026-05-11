@@ -33,9 +33,10 @@ conn = connect_to_database(db_config)
 
 # Display the title of the Streamlit app
 st.title("Record Store Database Interface")
+st.divider()
 
 # Sidebar for query selection
-st.sidebar.header("Database Queries")
+st.sidebar.markdown(" ## Database Queries")
 query_options = [
     "Main menu",
     "List all tracks in a specific album",
@@ -75,7 +76,7 @@ if selected_query == "Main menu":
         
     # Fetch albums with their formats and prices
     query = f"""
-        SELECT ar.Name, al.Title, v.Format, v.Price
+        SELECT ar.Name, al.Title, v.Format, v.Price, v.StockQuantity
         FROM ARTIST ar
         JOIN ARTIST_ALBUM aa ON ar.ArtistID = aa.ArtistID
         JOIN ALBUM al ON aa.AlbumID = al.AlbumID
@@ -105,13 +106,14 @@ if selected_query == "Main menu":
     # Display albums in a grid layout
     for index, row in df.iterrows():
         with columns[index % 3]:
-            st.subheader(f"{row['Name']} - {row['Title']} ({row['Format']})")
-            st.write(f"Price: ${row['Price']}")
+            st.markdown(f"### {row['Name']} - {row['Title']} ({row['Format']})",)
             cover_url = fetch_album_cover(row['Title'], row['Name'])
             if cover_url:
                 st.image(cover_url, width=150)
             else:
                 st.write("No cover available.")
+            st.write(f"**Price:** ${row['Price']}")
+            st.write(f"**Stock:** {row['StockQuantity']}")
 
 elif selected_query == "List all tracks in a specific album":
     album_id = st.number_input("Enter Album ID:", min_value=1, step=1)
