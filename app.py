@@ -3,6 +3,7 @@ import mysql.connector
 import pandas as pd
 from dotenv import load_dotenv
 import os
+import requests
 
 load_dotenv()
 
@@ -19,10 +20,10 @@ db_config = {
 def connect_to_database(config):
     try:
         conn = mysql.connector.connect(**config)
-        st.success("Connected to the database successfully.")
+        print("Connected to the database successfully.")
         return conn
     except mysql.connector.Error as err:
-        st.error(f"Error connecting to the database: {err}")
+        print(f"Error connecting to the database: {err}")
         st.stop()
 
 # Establish database connection
@@ -30,6 +31,59 @@ conn = connect_to_database(db_config)
 
 # Display the title of the Streamlit app
 st.title("Record Store Database Interface")
+
+@st.cache_data
+def fetch_data(query):
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        results = cursor.fetchall()
+        columns = [desc[0] for desc in cursor.description]
+        df = pd.DataFrame(results, columns=columns)
+        return df
+    except mysql.connector.Error as err:
+        st.error(f"Error fetching data: {err}")
+        return pd.DataFrame()  # Return an empty DataFrame on error
+    
+# Fetch albums with their formats and prices
+query = f"""
+    SELECT ar.Name, al.Title, v.Format, v.Price
+    FROM ARTIST ar
+    JOIN ARTIST_ALBUM aa ON ar.ArtistID = aa.ArtistID
+    JOIN ALBUM al ON aa.AlbumID = al.AlbumID
+    JOIN ALBUM_VARIANT v ON al.AlbumID = v.AlbumID;
+    """
+
+# Fetch data and store it in a DataFrame
+df = fetch_data(query)
+
+# Display albums in a grid layout
+columns = st.columns(3)
+
+# Function to fetch album cover from iTunes API
+@st.cache_data
+def fetch_album_cover(album_title,artist_name):
+    try:
+        response = requests.get(f"https://itunes.apple.com/search?term={artist_name}+{album_title}&entity=album&limit=5")
+        if response.status_code == 200:
+            data = response.json()
+            if 'results' in data and len(data['results']) > 0:
+                return data['results'][0]['artworkUrl100'].replace('100x100bb', '500x500bb')
+        return None
+    except Exception as e:
+        print(f"Error fetching album cover: {e}")
+        return None
+    
+# Display albums in a grid layout
+for index, row in df.iterrows():
+    with columns[index % 3]:
+        st.subheader(f"{row['Name']} - {row['Title']} ({row['Format']})")
+        st.write(f"Price: ${row['Price']}")
+        cover_url = fetch_album_cover(row['Title'], row['Name'])
+        if cover_url:
+            st.image(cover_url, width=150)
+        else:
+            st.write("No cover available.")
 
 # Sidebar for query selection
 st.sidebar.header("Database Queries")
