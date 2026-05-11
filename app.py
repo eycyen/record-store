@@ -76,7 +76,7 @@ if selected_query == "Main menu":
         
     # Fetch albums with their formats and prices
     query = f"""
-        SELECT ar.Name, al.Title, v.Format, v.Price, v.StockQuantity
+        SELECT ar.Name, al.Title, v.Format, v.Price, v.StockQuantity, v.VariantID
         FROM ARTIST ar
         JOIN ARTIST_ALBUM aa ON ar.ArtistID = aa.ArtistID
         JOIN ALBUM al ON aa.AlbumID = al.AlbumID
@@ -114,6 +114,68 @@ if selected_query == "Main menu":
                 st.write("No cover available.")
             st.write(f"**Price:** ${row['Price']}")
             st.write(f"**Stock:** {row['StockQuantity']}")
+            # Create a "Buy Now" button that opens a popover form
+            with st.popover("Buy Now", key=f"pop_{row['VariantID']}, disabled= row['StockQuantity'] <= 0"):
+                # Form for user input when "Buy Now" is clicked
+                with st.form(f"form_{row['VariantID']}"):
+                    st.text_input("First Name", key = f"fname_{row['VariantID']}")
+                    st.text_input("Last Name", key = f"lname_{row['VariantID']}")
+                    st.text_input("Email", key = f"email_{row['VariantID']}")
+                    st.text_input("Address", key = f"address_{row['VariantID']}")
+                    st.number_input("Quantity", key = f"quantity_{row['VariantID']}",min_value=1, max_value=row['StockQuantity'], step=1)
+                    submit = st.form_submit_button("Confirm Order")
+                    # Handle form submission and display confirmation message
+                    if submit:
+                        try:
+                            # Check if customer already exists based on email
+                            cursor = conn.cursor()
+                            query = f"""
+                            SELECT CustomerID FROM CUSTOMER WHERE Email = '{st.session_state[f'email_{row['VariantID']}']}';
+                            """
+                            cursor.execute(query)
+                            result = cursor.fetchone()
+                            # If customer does not exist, insert new customer and get the new CustomerID
+                            if not result:
+                                cursor.execute(f"""
+                                INSERT INTO CUSTOMER (FirstName, LastName, Email, Address) 
+                                VALUES ('{st.session_state[f'fname_{row['VariantID']}']}', '{st.session_state[f'lname_{row['VariantID']}']}', '{st.session_state[f'email_{row['VariantID']}']}', '{st.session_state[f'address_{row['VariantID']}']}');
+                                """)
+                                conn.commit()
+                                customer_id = cursor.lastrowid
+                            # If customer already exists, use the existing CustomerID
+                            else:
+                                customer_id = result[0]
+                            
+                            # Insert new order for the customer
+                            query = f"""
+                            INSERT INTO CUSTOMER_ORDER (OrderDate, TotalAmount, Status, CustomerID) VALUES (NOW(), {row['Price'] * st.session_state[f'quantity_{row['VariantID']}']}, 'Pending', {customer_id});
+                            """
+                            cursor.execute(query)
+                            conn.commit()
+                            order_id = cursor.lastrowid
+
+                            # Insert order item for the order
+                            query = f"""
+                            INSERT INTO ORDER_ITEM (OrderID, VariantID, Quantity, UnitPrice) VALUES ({order_id}, {row['VariantID']}, {st.session_state[f'quantity_{row['VariantID']}']}, {row['Price']});
+                            """
+                            cursor.execute(query)
+                            conn.commit()
+
+                            # Update stock quantity in ALBUM_VARIANT
+                            query = f"""
+                            UPDATE ALBUM_VARIANT SET StockQuantity = StockQuantity - {st.session_state[f'quantity_{row['VariantID']}']} WHERE VariantID = {row['VariantID']};
+                            """
+                            cursor.execute(query)
+                            conn.commit()
+                            cursor.close()
+
+                            # Display confirmation message
+                            st.success(f"Confirmed your order for {row['Title']} {row['Format']} x {st.session_state[f'quantity_{row['VariantID']}']}")
+                            # Re-run the app to update stock levels
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error confirming order: {e}")
+
 
 elif selected_query == "List all tracks in a specific album":
     album_id = st.number_input("Enter Album ID:", min_value=1, step=1)
