@@ -29,9 +29,12 @@ FROM CUSTOMER c
 JOIN CUSTOMER_ORDER co ON c.CustomerID = co.CustomerID
 GROUP BY c.CustomerID;
 
--- 5. Detailed order summary showing products inside an order (Testing M:N includes)
--- This query demonstrates the INCLUDES relationship between orders and variants
-SELECT co.OrderID, co.OrderDate, v.Format, oi.Quantity, oi.UnitPrice
+-- 5. Comprehensive Order History (Implementation of M:N Relationships)
+-- This query demonstrates the many-to-many relationship by joining CUSTOMER, CUSTOMER_ORDER, ORDER_ITEM, ALBUM_VARIANT, and ALBUM to show detailed order information
+SELECT co.OrderID, c.FirstName, c.LastName AS Customer_Name, a.Title AS Album_Title, v.Format, oi.Quantity, oi.UnitPrice
 FROM CUSTOMER_ORDER co
+JOIN CUSTOMER c ON co.CustomerID = c.CustomerID
 JOIN ORDER_ITEM oi ON co.OrderID = oi.OrderID
-JOIN ALBUM_VARIANT v ON oi.VariantID = v.VariantID;
+JOIN ALBUM_VARIANT v ON oi.VariantID = v.VariantID
+JOIN ALBUM a on a.AlbumID = v.AlbumID
+ORDER BY co.OrderDate;
