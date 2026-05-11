@@ -69,3 +69,28 @@ ALTER TABLE CUSTOMER_ORDER
 ADD COLUMN CustomerID INT,
 ADD CONSTRAINT fk_customer_order 
 FOREIGN KEY (CustomerID) REFERENCES CUSTOMER(CustomerID);
+
+-- STEP 5: Mapping M:N Relationships
+
+-- Table for ARTIST and ALBUM relationship (M:N)
+-- Many Artists can create Many Albums
+CREATE TABLE ARTIST_ALBUM (
+    ArtistID INT,
+    AlbumID INT,
+    PRIMARY KEY (ArtistID, AlbumID),
+    FOREIGN KEY (ArtistID) REFERENCES ARTIST(ArtistID),
+    FOREIGN KEY (AlbumID) REFERENCES ALBUM(AlbumID)
+);
+
+-- Table for ORDER and ALBUM_VARIANT relationship (M:N)
+-- An Order includes many items, and an item can be in many orders
+CREATE TABLE ORDER_ITEM (
+    OrderID INT,
+    VariantID INT,
+    Quantity INT NOT NULL,
+    UnitPrice DECIMAL(10,2) NOT NULL, -- business rule: save price during the sale
+    PRIMARY KEY (OrderID, VariantID),
+    FOREIGN KEY (OrderID) REFERENCES CUSTOMER_ORDER(OrderID),
+    FOREIGN KEY (VariantID) REFERENCES ALBUM_VARIANT(VariantID),
+    CHECK (Quantity > 0)
+);
