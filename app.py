@@ -115,14 +115,14 @@ if selected_query == "Main menu":
             st.write(f"**Price:** ${row['Price']}")
             st.write(f"**Stock:** {row['StockQuantity']}")
             # Create a "Buy Now" button that opens a popover form
-            with st.popover("Buy Now", key=f"pop_{row['VariantID']}, disabled= row['StockQuantity'] <= 0"):
+            with st.popover("Buy Now", key=f"pop_{row['VariantID']},", disabled = row['StockQuantity'] <= 0):
                 # Form for user input when "Buy Now" is clicked
                 with st.form(f"form_{row['VariantID']}"):
-                    st.text_input("First Name", key = f"fname_{row['VariantID']}")
-                    st.text_input("Last Name", key = f"lname_{row['VariantID']}")
-                    st.text_input("Email", key = f"email_{row['VariantID']}")
-                    st.text_input("Address", key = f"address_{row['VariantID']}")
-                    st.number_input("Quantity", key = f"quantity_{row['VariantID']}",min_value=1, max_value=row['StockQuantity'], step=1)
+                    first_name = st.text_input("First Name", key = f"fname_{row['VariantID']}")
+                    last_name = st.text_input("Last Name", key = f"lname_{row['VariantID']}")
+                    email = st.text_input("Email", key = f"email_{row['VariantID']}")
+                    address = st.text_input("Address", key = f"address_{row['VariantID']}")
+                    quantity = st.number_input("Quantity", key = f"quantity_{row['VariantID']}",min_value=1, max_value=row['StockQuantity'], step=1)
                     submit = st.form_submit_button("Confirm Order")
                     # Handle form submission and display confirmation message
                     if submit:
@@ -130,7 +130,7 @@ if selected_query == "Main menu":
                             # Check if customer already exists based on email
                             cursor = conn.cursor()
                             query = f"""
-                            SELECT CustomerID FROM CUSTOMER WHERE Email = '{st.session_state[f'email_{row['VariantID']}']}';
+                            SELECT CustomerID FROM CUSTOMER WHERE Email = '{email}';
                             """
                             cursor.execute(query)
                             result = cursor.fetchone()
@@ -138,7 +138,7 @@ if selected_query == "Main menu":
                             if not result:
                                 cursor.execute(f"""
                                 INSERT INTO CUSTOMER (FirstName, LastName, Email, Address) 
-                                VALUES ('{st.session_state[f'fname_{row['VariantID']}']}', '{st.session_state[f'lname_{row['VariantID']}']}', '{st.session_state[f'email_{row['VariantID']}']}', '{st.session_state[f'address_{row['VariantID']}']}');
+                                VALUES ('{first_name}', '{last_name}', '{email}', '{address }');
                                 """)
                                 conn.commit()
                                 customer_id = cursor.lastrowid
@@ -148,7 +148,7 @@ if selected_query == "Main menu":
                             
                             # Insert new order for the customer
                             query = f"""
-                            INSERT INTO CUSTOMER_ORDER (OrderDate, TotalAmount, Status, CustomerID) VALUES (NOW(), {row['Price'] * st.session_state[f'quantity_{row['VariantID']}']}, 'Pending', {customer_id});
+                            INSERT INTO CUSTOMER_ORDER (OrderDate, TotalAmount, Status, CustomerID) VALUES (NOW(), {row['Price'] * quantity}, 'Pending', {customer_id});
                             """
                             cursor.execute(query)
                             conn.commit()
@@ -156,23 +156,28 @@ if selected_query == "Main menu":
 
                             # Insert order item for the order
                             query = f"""
-                            INSERT INTO ORDER_ITEM (OrderID, VariantID, Quantity, UnitPrice) VALUES ({order_id}, {row['VariantID']}, {st.session_state[f'quantity_{row['VariantID']}']}, {row['Price']});
+                            INSERT INTO ORDER_ITEM (OrderID, VariantID, Quantity, UnitPrice) VALUES ({order_id}, {row['VariantID']}, {quantity}, {row['Price']});
                             """
                             cursor.execute(query)
                             conn.commit()
 
                             # Update stock quantity in ALBUM_VARIANT
                             query = f"""
-                            UPDATE ALBUM_VARIANT SET StockQuantity = StockQuantity - {st.session_state[f'quantity_{row['VariantID']}']} WHERE VariantID = {row['VariantID']};
+                            UPDATE ALBUM_VARIANT SET StockQuantity = StockQuantity - {quantity} WHERE VariantID = {row['VariantID']} AND StockQuantity >= {quantity};
                             """
                             cursor.execute(query)
                             conn.commit()
                             cursor.close()
 
                             # Display confirmation message
-                            st.success(f"Confirmed your order for {row['Title']} {row['Format']} x {st.session_state[f'quantity_{row['VariantID']}']}")
-                            # Re-run the app to update stock levels
+                            st.toast(f"Confirmed your order for {row['Title']}!", icon='✅')
+                            
+                            # Re-run the page to update stock
+                            import time
+                            time.sleep(1)
+                            st.cache_data.clear()
                             st.rerun()
+
                         except Exception as e:
                             st.error(f"Error confirming order: {e}")
 
