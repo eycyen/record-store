@@ -1,36 +1,40 @@
-# Record Store Database System
+# Record Store Management System
 
-This project involves the design and implementation of a relational database for a Record Store to manage its daily operations. It was developed for the COM2058 project at Ankara University, Computer Engineering Department.
+A comprehensive end-to-end database management solution designed to handle inventory, artist relations, and real-time sales transactions for a modern record store. This project serves as the final implementation for the Ankara University - COM2058 Database Management Systems course.
 
-## System Description
+## Core Features
 
-The system is designed to record and manage information regarding albums, artists, physical store items (such as vinyl records, CDs, and cassettes), customers, and customer orders. By using a relational database design, the system ensures data integrity and prevents the repetition of information.
+- Dynamic Digital Storefront: Automatically fetches high-resolution album covers from the Apple iTunes Search API based on database entries.
+- Real-time Stock Management: Implements CHECK constraints to ensure StockQuantity never drops below zero. Stock levels are updated instantly upon purchase.
+- ACID-Compliant Transactions: A single purchase flow synchronously updates the CUSTOMER, CUSTOMER_ORDER, and ORDER_ITEM tables to maintain data integrity.
+- Relational Admin Dashboard: A centralized view for administrators to track full transaction histories, customer details, and total revenue across multiple joins.
+- Advanced SQL Implementation: Optimized queries for artist-specific catalogs, stock alerts, and customer spending analysis.
 
-## Database Entities
+## Technical Stack
 
-The database consists of the following main entities:
+- Frontend/Logic: Streamlit (Python)
+- Database: MySQL 8.0
+- External Integration: Apple iTunes Search API
+- Data Handling: Pandas, Requests, MySQL Connector, Python-Dotenv
 
-* ARTIST: Represents the singer or the music band.
-* ALBUM: Represents the music release itself, independent of its physical format.
-* TRACK: Represents the individual songs contained within an album.
-* ALBUM_VARIANT (Physical Inventory): Represents the actual physical items available in the store (e.g., a specific vinyl or CD).
-* CUSTOMER: Represents the individuals who purchase music from the store.
-* CUSTOMER_ORDER: Represents the shopping receipt or the transaction record.
+## Project Architecture
 
-## Relationship Requirements
+1. Schema (01_schema.sql): Defines the relational structure, including primary/foreign keys and business logic constraints.
+2. Seed Data (02_seed.sql): Populates the environment with initial artists, multi-format album variants (Vinyl/CD), and sample transactions.
+3. Application (app.py): The main interface bridging the MySQL backend with the user-facing Streamlit dashboard.
 
-The entities are connected through the following relationships:
+## Installation and Execution
 
-* Artist and Album (M:N): One artist can create many albums, and one album can feature multiple artists (e.g., a duet).
-* Album and Track (1:N): One album contains many tracks, but a specific track belongs to only one album.
-* Album and Physical Inventory (1:N): One album can be released in many formats, but a specific physical item is linked to only one album.
-* Customer and Order (1:N): A customer can place many orders, but a single order is linked to exactly one customer.
-* Order and Physical Product (M:N): An order can contain many physical items, and a physical item can be included in many different orders. This relationship also records the specific sale details, such as quantity and unit price.
+1. Configure the .env file with your local MySQL credentials:
+   DB_HOST=your_host
+   DB_USER=your_user
+   DB_PASSWORD=your_password
+   DB_NAME=RECORD_STORE
 
-## Business Rules and Constraints
+2. Execute the SQL scripts in your MySQL environment to initialize the schema and seed data.
 
-The system enforces the following business rules to maintain data accuracy:
+3. Install dependencies:
+   pip install mysql-connector-python pandas requests python-dotenv streamlit
 
-* Stock Validation: The stock quantity of any physical item in the store cannot be less than zero.
-* Unique Customers: Customer email addresses must be unique. Two customers cannot register with the same email address.
-* Price History Integrity: The system must save the specific unit price in the order details at the time of the sale. This ensures that past order totals do not change if the store updates the current price of an item later.
+4. Launch the application:
+   streamlit run app.py
