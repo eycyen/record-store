@@ -47,3 +47,25 @@ CREATE TABLE CUSTOMER_ORDER (
     TotalAmount DECIMAL(10,2) DEFAULT 0.00,
     Status VARCHAR(20) DEFAULT 'Pending'
 );
+-- STEP 4: Mapping 1:N Relationships
+
+-- One Album has many Tracks 
+-- We add AlbumID to TRACK table
+ALTER TABLE TRACK 
+ADD COLUMN AlbumID INT,
+ADD CONSTRAINT fk_album_track 
+FOREIGN KEY (AlbumID) REFERENCES ALBUM(AlbumID);
+
+-- One Album can have many Formats like Vinyl or CD 
+-- We add AlbumID to ALBUM_VARIANT table
+ALTER TABLE ALBUM_VARIANT 
+ADD COLUMN AlbumID INT,
+ADD CONSTRAINT fk_album_variant 
+FOREIGN KEY (AlbumID) REFERENCES ALBUM(AlbumID);
+
+-- One Customer can make many Orders 
+-- We add CustomerID to CUSTOMER_ORDER table
+ALTER TABLE CUSTOMER_ORDER 
+ADD COLUMN CustomerID INT,
+ADD CONSTRAINT fk_customer_order 
+FOREIGN KEY (CustomerID) REFERENCES CUSTOMER(CustomerID);
