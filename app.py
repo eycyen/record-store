@@ -93,11 +93,11 @@ if selected_query == "Main menu":
     @st.cache_data
     def fetch_album_cover(album_title,artist_name):
         try:
-            response = requests.get(f"https://itunes.apple.com/search?term={artist_name}+{album_title}&entity=album&limit=5")
+            response = requests.get(f"https://itunes.apple.com/search?term={artist_name}+{album_title}+album&entity=album&limit=5")
             if response.status_code == 200:
                 data = response.json()
                 if 'results' in data and len(data['results']) > 0:
-                    return data['results'][0]['artworkUrl100'].replace('100x100bb', '500x500bb')
+                    return data['results'][0]['artworkUrl100'].replace('100x100bb', '1080x1080bb')
             return None
         except Exception as e:
             print(f"Error fetching album cover: {e}")
