@@ -221,14 +221,14 @@ elif selected_query == "Calculate total amount spent by each customer":
     execute_query(query)
 
 elif selected_query == "Detailed order summary showing products inside an order":
-    order_id = st.number_input("Enter Order ID:", min_value=1, step=1)
     query = f"""
-        SELECT co.OrderID, c.FirstName, c.LastName AS Customer_Name, v.Format, oi.Quantity, oi.UnitPrice
+        SELECT co.OrderID, c.FirstName, c.LastName AS Customer_Name, a.Title AS Album_Title, v.Format, oi.Quantity, oi.UnitPrice
         FROM CUSTOMER_ORDER co
         JOIN CUSTOMER c ON co.CustomerID = c.CustomerID
         JOIN ORDER_ITEM oi ON co.OrderID = oi.OrderID
         JOIN ALBUM_VARIANT v ON oi.VariantID = v.VariantID
-        WHERE co.OrderID = {order_id};
+        JOIN ALBUM a on a.AlbumID = v.AlbumID
+        ORDER BY co.OrderDate;
     """
     execute_query(query)
 
