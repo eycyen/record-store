@@ -43,3 +43,23 @@ INSERT INTO CUSTOMER_ORDER (OrderDate, TotalAmount, Status, CustomerID) VALUES
 INSERT INTO ORDER_ITEM (OrderID, VariantID, Quantity, UnitPrice) VALUES
 (1, 1, 1, 35.99), -- Harry Styles Vinyl
 (1, 3, 1, 39.99); -- Billie Eilish Vinyl
+
+-- Adding new albums to ALBUM table
+INSERT INTO ALBUM (Title, ReleaseDate, Genre) VALUES
+('Kiss All The Time. Disco, Occasionally.', '2026-03-06', 'Disco Pop'),
+('GUTS', '2023-09-08', 'Pop Rock'),
+('Happier Than Ever', '2021-07-30', 'Alternative Pop');
+
+-- Linking new albums with their artists (assuming IDs from previous steps)
+-- Harry Styles: 1, Billie Eilish: 2, Olivia Rodrigo: 3
+INSERT INTO ARTIST_ALBUM (ArtistID, AlbumID) VALUES
+(1, 4), -- Harry Styles - Kiss All The Time. Disco, Occasionally.
+(3, 5), -- Olivia Rodrigo - GUTS
+(2, 6); -- Billie Eilish - Happier Than Ever
+
+-- Adding physical variants for the new albums
+INSERT INTO ALBUM_VARIANT (Format, Price, StockQuantity, AlbumID) VALUES
+('Vinyl', 34.50, 12, 4),
+('CD', 12.99, 25, 4),
+('Vinyl', 38.00, 8, 5),
+('Vinyl', 42.00, 15, 6);
