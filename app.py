@@ -28,3 +28,28 @@ def connect_to_database(config):
 # Establish database connection
 conn = connect_to_database(db_config)
 
+# Display the title of the Streamlit app
+st.title("Record Store Database Interface")
+
+# Sidebar for query selection
+st.sidebar.header("Database Queries")
+query_options = [
+    "List all tracks in a specific album",
+    "Find all albums made by a specific artist",
+    "Show stock levels and prices for each album",
+    "Calculate total amount spent by each customer",
+    "Detailed order summary showing products inside an order"
+]
+selected_query = st.sidebar.selectbox("Select a query to execute:", query_options)
+
+# Function to execute the selected query
+def execute_query(query):
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        results = cursor.fetchall()
+        columns = [desc[0] for desc in cursor.description]
+        df = pd.DataFrame(results, columns=columns)
+        st.dataframe(df)
+    except mysql.connector.Error as err:
+        st.error(f"Error executing query: {err}")
