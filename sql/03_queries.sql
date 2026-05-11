@@ -35,5 +35,3 @@ SELECT co.OrderID, co.OrderDate, v.Format, oi.Quantity, oi.UnitPrice
 FROM CUSTOMER_ORDER co
 JOIN ORDER_ITEM oi ON co.OrderID = oi.OrderID
 JOIN ALBUM_VARIANT v ON oi.VariantID = v.VariantID;
-
-select * from order_item;

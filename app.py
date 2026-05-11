@@ -53,3 +53,55 @@ def execute_query(query):
         st.dataframe(df)
     except mysql.connector.Error as err:
         st.error(f"Error executing query: {err}")
+
+# Execute the selected query based on user input
+if selected_query == "List all tracks in a specific album":
+    album_id = st.number_input("Enter Album ID:", min_value=1, step=1)
+    query = f"""
+    SELECT t.TrackID, t.Title, t.Duration
+    FROM TRACK t
+    WHERE t.AlbumID = {album_id};
+    """
+    execute_query(query)
+
+elif selected_query == "Find all albums made by a specific artist":
+    artist_id = st.number_input("Enter Artist Id:", min_value=1, step=1)
+    query = f"""
+        SELECT ar.Name AS Artist_Name, al.Title AS Album_Title, al.Genre
+        FROM ARTIST ar
+        JOIN ARTIST_ALBUM aa ON ar.ArtistID = aa.ArtistID
+        JOIN ALBUM al ON aa.AlbumID = al.AlbumID
+        WHERE ar.ARTISTID = {artist_id};
+    """
+    execute_query(query)
+
+elif selected_query == "Show stock levels and prices for each album":
+    query = """
+        SELECT al.Title AS Album_Title, v.Format, v.StockQuantity, v.Price
+        FROM ALBUM al
+        JOIN ALBUM_VARIANT v ON al.AlbumID = v.AlbumID;
+    """
+    execute_query(query)
+
+elif selected_query == "Calculate total amount spent by each customer":
+    query = """
+        SELECT c.FirstName, c.LastName AS Customer_Name, SUM(oi.Quantity * oi.UnitPrice) AS Total_Spent
+        FROM CUSTOMER c
+        JOIN CUSTOMER_ORDER co ON c.CustomerID = co.CustomerID
+        JOIN ORDER_ITEM oi ON co.OrderID = oi.OrderID
+        GROUP BY c.CustomerID;
+    """
+    execute_query(query)
+
+elif selected_query == "Detailed order summary showing products inside an order":
+    order_id = st.number_input("Enter Order ID:", min_value=1, step=1)
+    query = f"""
+        SELECT co.OrderID, c.FirstName, c.LastName AS Customer_Name, v.Format, oi.Quantity, oi.UnitPrice
+        FROM CUSTOMER_ORDER co
+        JOIN CUSTOMER c ON co.CustomerID = c.CustomerID
+        JOIN ORDER_ITEM oi ON co.OrderID = oi.OrderID
+        JOIN ALBUM_VARIANT v ON oi.VariantID = v.VariantID
+        WHERE co.OrderID = {order_id};
+    """
+    execute_query(query)
+
